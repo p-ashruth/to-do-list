@@ -1,18 +1,43 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 import styles from "./index.module.scss";
 
 type Todo = { id: string; task: string; isDone: boolean };
 
+const STORAGE_KEYS = {
+  tasks: "todoTasks",
+} as const;
+
 const toggleTaskCase = (task: string) =>
   task === task.toUpperCase() ? task.toLowerCase() : task.toUpperCase();
 
+const loadTodos = (): Todo[] => {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEYS.tasks);
+    return saved ? (JSON.parse(saved) as Todo[]) : [];
+  } catch {
+    return [];
+  }
+};
+
+const saveTodos = (todos: Todo[]) => {
+  try {
+    localStorage.setItem(STORAGE_KEYS.tasks, JSON.stringify(todos));
+  } catch {
+    console.log("Could not save to localStorage.");
+  }
+};
+
 function TodoList() {
-  const [todos, setTodos] = useState<Todo[]>([]);
+  const [todos, setTodos] = useState<Todo[]>(loadTodos);
   const [newTodo, setNewTodo] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState("");
   const pendingEditActionRef = useRef<"save" | "cancel" | null>(null);
+
+  useEffect(() => {
+    saveTodos(todos);
+  }, [todos]);
 
   const updateTodoValue = (event: React.ChangeEvent<HTMLInputElement>) => {
     setNewTodo(event.target.value);
@@ -59,6 +84,11 @@ function TodoList() {
   };
 
   const resetApp = () => {
+    try {
+      localStorage.removeItem(STORAGE_KEYS.tasks);
+    } catch {
+      console.log("Could not clear localStorage.");
+    }
     setTodos([]);
     setNewTodo("");
   };
