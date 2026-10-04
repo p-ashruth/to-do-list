@@ -1,10 +1,18 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 import styles from "./index.module.scss";
 
+type Todo = { id: string; task: string; isDone: boolean };
+
+const toggleTaskCase = (task: string) =>
+  task === task.toUpperCase() ? task.toLowerCase() : task.toUpperCase();
+
 function TodoList() {
-  const [todos, setTodos] = useState<{ id: string; task: string; isDone: boolean }[]>([]);
+  const [todos, setTodos] = useState<Todo[]>([]);
   const [newTodo, setNewTodo] = useState("");
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editValue, setEditValue] = useState("");
+  const pendingEditActionRef = useRef<"save" | "cancel" | null>(null);
 
   const updateTodoValue = (event: React.ChangeEvent<HTMLInputElement>) => {
     setNewTodo(event.target.value);
@@ -31,8 +39,23 @@ function TodoList() {
     setTodos(todos.filter((todo) => !todo.isDone));
   };
 
-  const clearAllTasks = () => {
-    setTodos([]);
+  const toggleCaseAll = () => {
+    setTodos((prevTodos) => {
+      return prevTodos.map((todo) => {
+        return { ...todo, task: toggleTaskCase(todo.task) };
+      });
+    });
+  };
+
+  const toggleCase = (id: string) => {
+    setTodos((prevTodos) => {
+      return prevTodos.map((todo) => {
+        if (todo.id === id) {
+          return { ...todo, task: toggleTaskCase(todo.task) };
+        }
+        return todo;
+      });
+    });
   };
 
   const resetApp = () => {
@@ -51,6 +74,54 @@ function TodoList() {
     });
   };
 
+  const startEdit = (todo: Todo) => {
+    setEditingId(todo.id);
+    setEditValue(todo.task);
+  };
+
+  const saveEdit = () => {
+    if (editingId !== null && editValue.trim()) {
+      setTodos((prevTodos) => {
+        return prevTodos.map((todo) => {
+          if (todo.id === editingId) {
+            return { ...todo, task: editValue.trim() };
+          }
+          return todo;
+        });
+      });
+    }
+    setEditingId(null);
+    setEditValue("");
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setEditValue("");
+  };
+
+  const handleEditBlur = () => {
+    const action = pendingEditActionRef.current;
+    pendingEditActionRef.current = null;
+    if (action === "cancel") {
+      cancelEdit();
+    } else {
+      saveEdit();
+    }
+  };
+
+  const handleEditKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === "Enter") {
+      pendingEditActionRef.current = "save";
+      event.currentTarget.blur();
+    }
+    if (event.key === "Escape") {
+      pendingEditActionRef.current = "cancel";
+      event.currentTarget.blur();
+    }
+  };
+
+  const completedCount = todos.filter((t) => t.isDone).length;
+
   return (
     <div className={styles.container}>
       <div className={styles.header}>
@@ -58,48 +129,88 @@ function TodoList() {
         <p>Stay organized and productive</p>
       </div>
 
-      <div className={styles.inputSection}>
+      <div className={styles["input-section"]}>
         <input
           type="text"
-          className={styles.taskInput}
-          placeholder="Add a new task..."
+          className={styles["task-input"]}
+          placeholder="Add a New Task"
           maxLength={200}
           value={newTodo}
           onChange={updateTodoValue}
         />
-        <button className={styles.addBtn} onClick={addNewTask}>Add Task</button>
+        <button className={styles["add-btn"]} onClick={addNewTask}>Add Task</button>
       </div>
 
       <div className={styles.stats}>
-        <span>Total: <span id="total-tasks">{todos.length}</span></span>
-        <span>Completed: <span id="completed-tasks">{todos.filter((t) => t.isDone).length}</span></span>
-        <span>Remaining: <span id="remaining-tasks">{todos.filter((t) => !t.isDone).length}</span></span>
+        <span>Total: <span>{todos.length}</span></span>
+        <span>Completed: <span>{completedCount}</span></span>
+        <span>Remaining: <span>{todos.length - completedCount}</span></span>
       </div>
 
-      <div className={styles.todoList} id="todo-list">
+      <div className={styles["todo-list"]}>
         {todos.length === 0 ? (
-          <div className={styles.emptyState}>
+          <div className={styles["empty-state"]}>
             <p>No tasks yet. Add one above to get started!</p>
           </div>
         ) : (
-          <ul>
-            {todos.map((todo) => (
-              <li key={todo.id} className={`${styles.todoItem} ${todo.isDone ? styles.completed : ""}`}>
-                <div className={`${styles.todoCheckbox} ${todo.isDone ? styles.checked : ""}`} onClick={() => markDone(todo.id)} />
-                <span className={`${styles.todoText} ${todo.isDone ? styles.completed : ""}`}>{todo.task}</span>
-                <div className={styles.todoActions}>
-                  <button className={styles.deleteBtn} onClick={() => deleteTask(todo.id)}>✕</button>
+          todos.map((todo) => (
+            <div
+              key={todo.id}
+              className={`${styles["todo-item"]} ${todo.isDone ? styles.completed : ""}`}
+            >
+              <div
+                className={`${styles["todo-checkbox"]} ${todo.isDone ? styles.checked : ""}`}
+                onClick={() => markDone(todo.id)}
+              />
+              {editingId === todo.id ? (
+                <input
+                  type="text"
+                  className={`${styles["todo-text"]} ${styles.editing}`}
+                  value={editValue}
+                  maxLength={200}
+                  autoFocus
+                  onFocus={(e) => e.currentTarget.select()}
+                  onChange={(e) => setEditValue(e.target.value)}
+                  onBlur={handleEditBlur}
+                  onKeyDown={handleEditKeyDown}
+                />
+              ) : (
+                <div
+                  className={`${styles["todo-text"]} ${todo.isDone ? styles.completed : ""}`}
+                  onClick={() => startEdit(todo)}
+                >
+                  {todo.task}
                 </div>
-              </li>
-            ))}
-          </ul>
+              )}
+              <div className={styles["todo-actions"]}>
+                <button
+                  className={styles["edit-btn"]}
+                  onClick={() => startEdit(todo)}
+                >
+                  ✏️
+                </button>
+                <button
+                  className={styles["edit-btn"]}
+                  onClick={() => toggleCase(todo.id)}
+                >
+                  Aa
+                </button>
+                <button
+                  className={styles["delete-btn"]}
+                  onClick={() => deleteTask(todo.id)}
+                >
+                  🗑️
+                </button>
+              </div>
+            </div>
+          ))
         )}
       </div>
 
       <div className={styles.controls}>
-        <button onClick={clearCompletedTasks}>Clear Completed</button>
-        <button onClick={clearAllTasks}>Clear All</button>
-        <button onClick={resetApp}>Reset App</button>
+        <button className={styles.clearCompletedBtn} onClick={clearCompletedTasks}>Clear Completed</button>
+        <button className={styles.toggleCaseBtn} onClick={toggleCaseAll}>Toggle Case All</button>
+        <button className={styles.resetBtn} onClick={resetApp}>Reset App</button>
       </div>
     </div>
   );
