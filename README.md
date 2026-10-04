@@ -1,75 +1,45 @@
-# React + TypeScript + Vite
+# To-Do List App
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A simple, responsive to-do list application to keep track of your daily tasks.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+### Task Management
+- **Add tasks** — type in the input field (max 200 characters) and click **Add Task**; empty/whitespace-only tasks are ignored
+- **Mark as done** — click the circular checkbox on a task to toggle it between completed and pending
+- **Edit tasks** — click a task's text or its ✏️ button to edit inline:
+  - **Enter** saves the change
+  - **Escape** cancels and restores the original text
+  - Clicking away (blur) saves, unless the new text is empty
+- **Delete tasks** — remove an individual task with its 🗑️ button
 
-## React Compiler
+### Toggle Case
+- **Toggle case per task** — the **Aa** button flips a task between UPPERCASE and lowercase
+- **Toggle Case All** — flips the case of every task at once
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### Reset App
+- **Clear Completed** — removes all completed tasks at once
+- **Reset App** — wipes the input, removes all tasks, and clears persisted data
 
-## Expanding the ESLint configuration
+### Local Storage
+- Tasks are saved automatically on every change and restored on page reload
+- Storage access is wrapped in try/catch, so the app degrades gracefully (in-memory only) if `localStorage` is unavailable
+- First-time visitors (and after **Reset App**) see an empty state: *"No tasks yet. Add one above to get started!"*
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+### Task Statistics
+Live counters displayed in a stats bar:
+- **Total** — number of tasks
+- **Completed** — tasks marked as done
+- **Remaining** — tasks still pending
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+### UI / Styling
+- Green-themed responsive design with smooth animations (slide-in container, fade-in task items) and hover effects
+- Scrollable task list with custom scrollbar (max height 400px)
+- Responsive breakpoints at 768px and 480px (stacked input, full-width buttons, adjusted sizing)
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+## Getting Started
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
-```
-
-You can also install [eslint-plugin-react-x](https://npmx.dev/package/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://npmx.dev/package/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
+```bash
+npm install
+npm run dev
 ```
