@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>To-Do List</title>
+  <link href = "styles.css" rel = "stylesheet">
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>My Tasks</h1>
+      <p>Stay organized and productive</p>
+    </div>
+
+    <div class="input-section">
+      <input type="text" class="task-input" placeholder="Add a new task..." maxlength="200" />
+      <button class="add-btn">Add Task</button>
+    </div>
+
+    <div class="stats">
+      <span>Total: <span id="total-tasks">0</span></span>
+      <span>Completed: <span id="completed-tasks">0</span></span>
+      <span>Remaining: <span id="remaining-tasks">0</span></span>
+    </div>
+
+    <div class="todo-list" id="todo-list">
+      <div class="empty-state">
+        <p>No tasks yet. Add one above to get started!</p>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button onclick="todoApp.clearCompletedTasks()">Clear Completed</button>
+      <button onclick="todoApp.clearAllTasks()">Clear All</button>
+      <button onclick="todoApp.resetApp()">Reset App</button>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
